@@ -1,0 +1,4 @@
+*.pyc
+sru*
+/embedding
+.vscode
