@@ -1,9 +1,0 @@
-data/antibody/test_sabdab.jsonl filter=lfs diff=lfs merge=lfs -text
-data/antibody/train_data.jsonl filter=lfs diff=lfs merge=lfs -text
-data/antibody/val_data.jsonl filter=lfs diff=lfs merge=lfs -text
-data/antibody/test_HER2.jsonl filter=lfs diff=lfs merge=lfs -text
-data/drug/test_casf16.pkl filter=lfs diff=lfs merge=lfs -text
-data/drug/test_equibind.pkl filter=lfs diff=lfs merge=lfs -text
-data/drug/test_fep.pkl filter=lfs diff=lfs merge=lfs -text
-data/drug/train_refine.pkl filter=lfs diff=lfs merge=lfs -text
-data/skempi/data.pkl filter=lfs diff=lfs merge=lfs -text
