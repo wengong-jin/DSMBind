@@ -23,3 +23,6 @@ cd sru
 git checkout 3.0.0-dev
 pip install .
 ```
+
+# Inference
+This notebook `tutorials.ipynb` contains all the relevation information on predicting binding energy for protein-ligand, protein-protein, and antibody-antigen complexes.
