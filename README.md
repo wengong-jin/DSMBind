@@ -18,6 +18,7 @@ Please make sure you install the following packages
 * Chemprop (https://github.com/chemprop/chemprop)
 * tqdm
 * rdkit
+* sidechainnet <= 0.7.6 (1.0 changes the side-chain dimension from 14 to 15)
 
 Once you finished these installation, please run `pip install -e .`. To install SRU++, run 
 ```
