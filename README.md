@@ -15,6 +15,9 @@ Please make sure you install the following packages
 * biotite (https://www.biotite-python.org/install.html)
 * SRU++ (https://github.com/asappresearch/sru)
 * ESM-2 (https://github.com/facebookresearch/esm)
+* Chemprop (https://github.com/chemprop/chemprop)
+* tqdm
+* rdkit
 
 Once you finished these installation, please run `pip install -e .`. To install SRU++, run 
 ```
