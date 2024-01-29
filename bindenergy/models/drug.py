@@ -5,7 +5,7 @@ import numpy as np
 import random, math
 from bindenergy.utils.utils import _expansion, _density, _score
 from bindenergy.models.frame import FAEncoder, AllAtomEncoder
-from bindenergy.models.rigid import FARigidModel
+from bindenergy.models.energy import FARigidModel
 from chemprop.features import BatchMolGraph, get_atom_fdim, get_bond_fdim, mol2graph
 from chemprop.nn_utils import index_select_ND
 from typing import List, Union
