@@ -3,12 +3,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import random, math
+from sidechainnet.utils.measure import get_seq_coords_and_angles
+from prody import *
+from rdkit import Chem
+from rdkit.Chem import PandasTools
 from bindenergy.utils.utils import _expansion, _density, _score
 from bindenergy.models.frame import FAEncoder, AllAtomEncoder
 from bindenergy.models.energy import FARigidModel
+from bindenergy.data.drug import DrugDataset
+from bindenergy.utils import load_esm_embedding
 from chemprop.features import BatchMolGraph, get_atom_fdim, get_bond_fdim, mol2graph
 from chemprop.nn_utils import index_select_ND
-from typing import List, Union
 
 
 class MPNEncoder(nn.Module):
@@ -207,6 +212,7 @@ class DrugAllAtomEnergyModel(FARigidModel):
         super(DrugAllAtomEnergyModel, self).__init__()
         self.mse_loss = nn.MSELoss()
         self.threshold = args.threshold
+        self.args = args
         self.mpn = MPNEncoder(args)
         self.encoder = AllAtomEncoder(args)
         self.W_o = nn.Sequential(
@@ -359,6 +365,33 @@ class DrugAllAtomEnergyModel(FARigidModel):
             return (energy * mask_2D).sum(dim=(-1, -2))
         else:
             return (energy * mask_2D).sum(dim=(1,2))  # [B]
+    
+    def virtual_screen(self, protein_pdb, sdf_list, batch_size=200):
+        hchain = parsePDB(protein_pdb, model=1)
+        _, hcoords, hseq, _, _ = get_seq_coords_and_angles(hchain)
+        hcoords = hcoords.reshape((len(hseq), 14, 3))
+
+        all_data = []
+        for ligand_sdf in sdf_list:
+            df = PandasTools.LoadSDF(ligand_sdf, molColName='Molecule', includeFingerprints=False)
+            mol = df['Molecule'][0]
+            entry = {
+                "binder_mol": mol, "target_seq": hseq, "target_coords": hcoords,
+            }
+            all_data.append(entry)
+        
+        embedding = load_esm_embedding(all_data[0], ['target_seq'])
+        all_data = DrugDataset.process(all_data, self.args.patch_size)
+        all_score = []
+
+        for i in range(0, len(all_data), batch_size):
+            batch = all_data[i : i + batch_size]
+            binder, target = DrugDataset.make_bind_batch(batch, embedding, self.args)
+            score = self.predict(binder, target)
+            for entry,aff in zip(batch, score):
+                smiles = Chem.MolToSmiles(entry['binder_mol'])
+                all_score.append((smiles, aff))
+        return all_score
 
     def gaussian_forward(self, binder, target):
         true_X, mol_batch, bind_A, _ = binder

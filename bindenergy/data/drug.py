@@ -44,6 +44,29 @@ class DrugDataset():
         return self.data[idx]
 
     @staticmethod
+    def process(raw_data, patch_size):
+        data = []
+        for entry in tqdm(raw_data):
+            entry['target_coords'] = torch.tensor(entry['target_coords']).float()
+            entry['target_dihedrals'] = torch.zeros(len(entry['target_seq']), 6)
+            entry['target_atypes'] = torch.tensor(
+                [[ATOM_TYPES.index(a) for a in RES_ATOM14[ALPHABET.index(s)]] for s in entry['target_seq']]
+            )
+            mol = entry['binder_mol']
+            conf = mol.GetConformer()
+            coords = [conf.GetAtomPosition(i) for i,atom in enumerate(mol.GetAtoms())]
+            entry['binder_coords'] = torch.tensor([[p.x, p.y, p.z] for p in coords]).float()
+            # make pocket
+            dist = entry['target_coords'][:, 1] - entry['binder_coords'].mean(dim=0, keepdims=True)
+            entry['pocket_idx'] = idx = dist.norm(dim=-1).sort().indices[:patch_size].sort().values
+            entry['pocket_seq'] = ''.join([entry['target_seq'][i] for i in idx.tolist()])
+            entry['pocket_coords'] = entry['target_coords'][idx]
+            entry['pocket_atypes'] = entry['target_atypes'][idx]
+            entry['pocket_dihedrals'] = entry['target_dihedrals'][idx]
+            data.append(entry)
+        return data
+
+    @staticmethod
     def make_bind_batch(batch, embedding, args):
         mols = [entry['binder_mol'] for entry in batch]
         N = max([mol.GetNumAtoms() for mol in mols])
