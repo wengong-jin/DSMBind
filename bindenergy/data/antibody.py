@@ -40,7 +40,7 @@ class AntibodyDataset():
                 entry['paratope_atypes'] = entry['antibody_atypes'][idx]
                 entry['paratope_dihedrals'] = entry['antibody_dihedrals'][idx]
 
-                entry['scaffold_idx'] = idx = [i for i,v in enumerate(entry['antibody_cdr']) if v not in '0' + cdr_type]
+                entry['scaffold_idx'] = idx = [i for i,(x,y) in enumerate(zip(entry['antibody_seq'], entry['antibody_cdr'])) if y == '0']
                 entry['scaffold_seq'] = ''.join([entry['antibody_seq'][i] for i in idx])
                 entry['scaffold_coords'] = entry['antibody_coords'][idx]
                 entry['scaffold_atypes'] = entry['antibody_atypes'][idx]
@@ -152,3 +152,12 @@ class AntibodyDataset():
         tgt_S[:, :, 0] = 0
         return (cdr_X, cdr_S, cdr_A, cdr_aa), (tgt_X, tgt_S, tgt_A, tgt_aa)
 
+    @staticmethod
+    def make_batch_noembed(batch, binder, target):
+        cdr_X, cdr_aa, cdr_A, _ = featurize(batch, binder)
+        tgt_X, tgt_aa, tgt_A, _ = featurize(batch, target)
+        cdr_S = F.one_hot(cdr_aa, num_classes=len(ALPHABET)).float()
+        tgt_S = F.one_hot(tgt_aa, num_classes=len(ALPHABET)).float()
+        cdr_S[:, :, 0] = 0
+        tgt_S[:, :, 0] = 0
+        return (cdr_X, cdr_S, cdr_A, cdr_aa), (tgt_X, tgt_S, tgt_A, tgt_aa)
