@@ -55,6 +55,14 @@ def eig_coord_from_dist(D):
     X = torch.matmul(V, L.clamp(min=0).sqrt())
     return X[:, :, -3:].detach()
 
+def inner_square_dist(X, mask):
+    L = mask.size(2)
+    dX = X.unsqueeze(2) - X.unsqueeze(3)  # [B,N,1,L,3] - [B,N,L,1,3]
+    mask_2D = mask.unsqueeze(2) * mask.unsqueeze(3)
+    mask_2D = mask_2D * (1 - torch.eye(L)[None,None,:,:]).to(mask_2D)
+    D = torch.sum(dX**2, dim=-1)
+    return D * mask_2D, mask_2D
+
 def self_square_dist(X, mask):
     X = X[:, :, 1] 
     dX = X.unsqueeze(1) - X.unsqueeze(2)  # [B, 1, N, 3] - [B, N, 1, 3]
